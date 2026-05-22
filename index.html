@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG 2D - Aventura</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game"></div>
+    
+    <!-- Configuración -->
+    <script src="src/config/game_config.js"></script>
+    <script src="src/config/assets_config.js"></script>
+    
+    <!-- Entidades -->
+    <script src="src/entities/character.js"></script>
+    <script src="src/entities/player.js"></script>
+    <script src="src/entities/orc.js"></script>
+    
+    <!-- Proyectiles -->
+    <script src="src/projectiles/projectile.js"></script>
+    
+    <!-- UI -->
+    <script src="src/ui/health_bar.js"></script>
+    
+    <!-- Mundo -->
+    <script src="src/world/map_generator.js"></script>
+    <script src="src/world/collision_manager.js"></script>
+    
+    <!-- Managers -->
+    <script src="src/managers/combat_manager.js"></script>
+    <script src="src/managers/game_manager.js"></script>
+    
+    <!-- Juego Principal -->
+    <script src="src/game.js"></script>
+</body>
+</html>
