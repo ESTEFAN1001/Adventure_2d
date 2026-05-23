@@ -17,14 +17,15 @@ class GameManager {
         this.collisionManager = null;
         this.combatManager = null;
         this.projectileManager = null;
+        this.spawnManager = null;
 
         // Entidades
         this.player = null;
-        this.orc = null;
+        this.enemies = [];
 
         // Elementos de interfaz
         this.playerHealthBar = null;
-        this.orcHealthBar = null;
+        this.enemyHealthBars = [];
         this.debugText = null;
 
         // Grupos de física
@@ -38,6 +39,31 @@ class GameManager {
         this.debugCounter = 0;
         this.gameOver = false;
         this.winner = null;
+        
+        // Configuración de spawn
+        this.enemySpawnConfig = {
+            'orc': 1 // Cantidad de orcos a generar (personalizable)
+        };
+    }
+
+    /**
+     * Configura la cantidad de enemigos a generar
+     * @param {Object} spawnConfig - Configuración de spawn {enemyType: count}
+     * @example
+     * setEnemySpawnConfig({ 'orc': 3 }); // Generar 3 orcos
+     * setEnemySpawnConfig({ 'orc': 2, 'goblin': 3 }); // Generar 2 orcos y 3 goblins
+     */
+    setEnemySpawnConfig(spawnConfig) {
+        this.enemySpawnConfig = spawnConfig;
+        console.log('Configuración de spawn actualizada:', this.enemySpawnConfig);
+    }
+
+    /**
+     * Obtiene la configuración actual de spawn de enemigos
+     * @returns {Object} Configuración de spawn
+     */
+    getEnemySpawnConfig() {
+        return this.enemySpawnConfig;
     }
 
     /**
@@ -119,10 +145,18 @@ class GameManager {
             scene: this.scene,
             group: this.projectiles
         });
+
+        // Crear SpawnManager
+        this.spawnManager = new SpawnManager({
+            scene: this.scene,
+            player: null, // Se inicializará después de crear el jugador
+            walls: this.walls,
+            findValidPositionFarFromPlayer: this.findValidPositionFarFromPlayer.bind(this)
+        });
     }
 
     /**
-     * Configura las entidades (jugador y orco)
+     * Configura las entidades (jugador y enemigos)
      */
     setupEntities() {
         // Encontrar posición válida para el jugador
@@ -136,38 +170,35 @@ class GameManager {
         });
         this.player.initialize();
 
-        // Encontrar posición válida para el orco (lejos del jugador)
-        let orcPos = this.findValidPositionFarFromPlayer(this.player);
+        // Actualizar SpawnManager con referencia al jugador
+        this.spawnManager.player = this.player;
 
-        this.orc = new Orc({
-            scene: this.scene,
-            x: orcPos.x,
-            y: orcPos.y,
-            player: this.player,
-            walls: this.walls
-        });
-        this.orc.initialize();
+        // Generar enemigos según la configuración
+        for (const [enemyType, count] of Object.entries(this.enemySpawnConfig)) {
+            const spawnedEnemies = this.spawnManager.spawnEnemies(enemyType, count);
+            this.enemies = this.enemies.concat(spawnedEnemies);
+        }
 
         console.log(`Jugador creado en (${playerPos.x}, ${playerPos.y})`);
-        console.log(`Orco creado en (${orcPos.x}, ${orcPos.y})`);
+        console.log(`${this.enemies.length} enemigo(s) generado(s)`);
     }
 
     /**
      * Configura las colisiones entre entidades
      */
     setupCollisions() {
-        // Colisión: Jugador y Orco
-        this.collisionManager.setupPlayerOrcCollision(
+        // Colisión: Jugador y Enemigos
+        this.collisionManager.setupPlayerMultipleEnemiesCollision(
             this.player,
-            this.orc,
-            () => this.onPlayerOrcCollision()
+            this.enemies,
+            (player, enemy) => this.onPlayerEnemyCollision(player, enemy)
         );
 
-        // Colisión: Proyectiles y Orco
-        this.collisionManager.setupProjectileOrcCollision(
+        // Colisión: Proyectiles y Enemigos
+        this.collisionManager.setupProjectileMultipleEnemiesCollision(
             this.projectiles,
-            this.orc,
-            (projectile, orc) => this.onProjectileOrcCollision(projectile, orc)
+            this.enemies,
+            (projectileSprite, enemySprite) => this.onProjectileEnemyCollision(projectileSprite, enemySprite)
         );
 
         // Colisión: Proyectiles y Paredes
@@ -189,10 +220,14 @@ class GameManager {
         });
         this.player.setHealthBar(this.playerHealthBar);
 
-        // Barra de vida del orco
-        this.orcHealthBar = new HealthBar({
-            scene: this.scene,
-            character: this.orc
+        // Barras de vida de los enemigos
+        this.enemies.forEach((enemy, index) => {
+            const enemyHealthBar = new HealthBar({
+                scene: this.scene,
+                character: enemy
+            });
+            this.spawnManager.addHealthBar(enemy, enemyHealthBar);
+            this.enemyHealthBars.push(enemyHealthBar);
         });
 
         // Texto de debug
@@ -231,18 +266,11 @@ class GameManager {
             this.player.update();
         }
 
-        if (this.orc.isActive()) {
-            this.orc.update();
-        }
+        // Actualizar todos los enemigos a través del SpawnManager
+        this.spawnManager.update();
 
         // Actualizar UI
         this.playerHealthBar.update();
-        if (this.orc.isActive()) {
-            this.orcHealthBar.update();
-        } else if (this.orc.getDeadSprite()) {
-            // Actualizar posición del texto si el orco está muerto
-            this.orcHealthBar.update();
-        }
 
         // Actualizar debug
         if (this.debugCounter % GameConfig.debug.LOG_INTERVAL === 0) {
@@ -250,7 +278,7 @@ class GameManager {
         }
 
         // Verificar estado del juego
-        const status = this.combatManager.checkCombatStatus(this.player, this.orc);
+        const status = this.combatManager.checkCombatStatus(this.player, this.enemies);
         if (status.gameOver && !this.gameOver) {
             this.handleGameOver(status);
         }
@@ -268,33 +296,36 @@ class GameManager {
             `Camera X: ${Math.floor(this.camera.scrollX)}`,
             `Camera Y: ${Math.floor(this.camera.scrollY)}`,
             `Active Projectiles: ${this.projectileManager.getActiveCount()}`,
-            `Last Direction: ${this.player.getDirection()}`
+            `Last Direction: ${this.player.getDirection()}`,
+            `Enemies: ${this.spawnManager.getActiveEnemyCount()}/${this.spawnManager.getTotalEnemyCount()}`
         ];
 
-        if (this.orc.isActive()) {
-            debugInfo.push(
-                `Orc Health: ${this.orc.currentHealth}/${this.orc.maxHealth}`,
-                `Orc State: ${this.orc.isChasing ? 'Chasing' : 'Patrolling'}`
-            );
-        } else {
-            debugInfo.push('Orc: DEAD');
-        }
+        // Agregar información de cada enemigo
+        this.enemies.forEach((enemy, index) => {
+            if (enemy.isActive()) {
+                debugInfo.push(
+                    `${enemy.enemyType} ${index}: HP=${enemy.currentHealth}/${enemy.maxHealth}, State=${enemy.isChasingPlayer() ? 'Chasing' : 'Patrolling'}`
+                );
+            } else {
+                debugInfo.push(`${enemy.enemyType} ${index}: DEAD`);
+            }
+        });
 
         this.debugText.setText(debugInfo);
     }
 
     /**
-     * Maneja las colisiones entre jugador y orco
+     * Maneja las colisiones entre jugador y enemigos
      */
-    onPlayerOrcCollision() {
-        this.combatManager.orcAttackPlayer(this.player, this.orc);
+    onPlayerEnemyCollision(player, enemy) {
+        this.combatManager.enemyAttackPlayer(player, enemy);
     }
 
     /**
-     * Maneja las colisiones entre proyectiles y orco
+     * Maneja las colisiones entre proyectiles y enemigos
      * Valida correctamente cuál es el proyectil (Phaser puede pasar parámetros en diferente orden)
      */
-    onProjectileOrcCollision(body1, body2) {
+    onProjectileEnemyCollision(body1, body2) {
         // Identificar cuál es el proyectil basado en la textura
         let projectile = null;
         if (body1.texture && body1.texture.key === 'projectile') {
@@ -303,9 +334,18 @@ class GameManager {
             projectile = body2;
         }
 
-        // Verificar que el orco está vivo antes de aplicar daño
-        if (this.orc && this.orc.isActive() && projectile) {
-            this.combatManager.projectileHitOrc(projectile, this.orc);
+        // Encontrar cuál es el enemigo
+        let enemy = null;
+        for (let e of this.enemies) {
+            if (body1 === e.sprite || body2 === e.sprite) {
+                enemy = e;
+                break;
+            }
+        }
+
+        // Verificar que el enemigo está vivo antes de aplicar daño
+        if (enemy && enemy.isActive() && projectile) {
+            this.combatManager.projectileHitEnemy(projectile, enemy);
         } else if (projectile) {
             projectile.destroy();
         }
@@ -422,9 +462,15 @@ class GameManager {
             gameOver: this.gameOver,
             winner: this.winner,
             playerHealth: this.player.currentHealth,
-            orcHealth: this.orc.currentHealth,
             playerAlive: this.player.isActive(),
-            orcAlive: this.orc.isActive()
+            enemyCount: this.enemies.length,
+            activeEnemyCount: this.spawnManager.getActiveEnemyCount(),
+            enemies: this.enemies.map(e => ({
+                type: e.enemyType,
+                alive: e.isActive(),
+                health: e.currentHealth,
+                maxHealth: e.maxHealth
+            }))
         };
     }
 
@@ -433,9 +479,11 @@ class GameManager {
      */
     destroy() {
         if (this.player) this.player.destroy();
-        if (this.orc) this.orc.destroy();
+        if (this.spawnManager) this.spawnManager.destroy();
         if (this.playerHealthBar) this.playerHealthBar.destroy();
-        if (this.orcHealthBar) this.orcHealthBar.destroy();
+        this.enemyHealthBars.forEach(hb => {
+            if (hb) hb.destroy();
+        });
         if (this.projectileManager) this.projectileManager.clear();
     }
 }
