@@ -9,9 +9,11 @@ class CombatManager {
     /**
      * @param {Object} config - Configuración del gestor de combate
      * @param {Phaser.Scene} config.scene - Escena de Phaser
+     * @param {EffectManager} config.effectManager - Gestor de efectos visuales
      */
     constructor(config) {
         this.scene = config.scene;
+        this.effectManager = config.effectManager || null;
     }
 
     /**
@@ -105,6 +107,12 @@ class CombatManager {
             return;
         }
 
+        // Obtener posición del impacto
+        const impactPos = {
+            x: projectile.x,
+            y: projectile.y
+        };
+
         // Aplicar daño aleatorio entre 5 y 15
         const damage = Phaser.Math.Between(
             GameConfig.projectiles.DAMAGE_RANGE.min,
@@ -113,6 +121,19 @@ class CombatManager {
 
         console.log(`Proyectil golpea a ${enemy.enemyType}: ${damage} daño`);
         this.dealDamage(null, enemy, damage);
+
+        // Crear efecto de explosión en el punto de impacto
+        if (this.effectManager) {
+            console.log(`Creando explosión en (${impactPos.x}, ${impactPos.y})`);
+            this.effectManager.createExplosion({
+                x: impactPos.x,
+                y: impactPos.y,
+                scale: GameConfig.effects.explosion.SCALE,
+                duration: GameConfig.effects.explosion.DURATION
+            });
+        } else {
+            console.error('EffectManager no está disponible');
+        }
         
         // Destruir el proyectil solo una vez
         if (projectile.active) {

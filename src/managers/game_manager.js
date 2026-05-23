@@ -18,6 +18,7 @@ class GameManager {
         this.combatManager = null;
         this.projectileManager = null;
         this.spawnManager = null;
+        this.effectManager = null;
 
         // Entidades
         this.player = null;
@@ -127,12 +128,17 @@ class GameManager {
      * Configura los managers de subsistemas
      */
     setupManagers() {
+        this.effectManager = new EffectManager({
+            scene: this.scene
+        });
+
         this.collisionManager = new CollisionManager({
             scene: this.scene
         });
 
         this.combatManager = new CombatManager({
-            scene: this.scene
+            scene: this.scene,
+            effectManager: this.effectManager
         });
 
         // Crear grupo de proyectiles
@@ -325,7 +331,7 @@ class GameManager {
      * Maneja las colisiones entre proyectiles y enemigos
      * Valida correctamente cuál es el proyectil (Phaser puede pasar parámetros en diferente orden)
      */
-    onProjectileEnemyCollision(body1, body2) {
+    onProjectileEnemyCollision(body1, body2) {        
         // Identificar cuál es el proyectil basado en la textura
         let projectile = null;
         if (body1.texture && body1.texture.key === 'projectile') {
@@ -485,5 +491,6 @@ class GameManager {
             if (hb) hb.destroy();
         });
         if (this.projectileManager) this.projectileManager.clear();
+        if (this.effectManager) this.effectManager.destroy();
     }
 }
