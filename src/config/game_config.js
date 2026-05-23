@@ -7,8 +7,8 @@ const GameConfig = {
     // Configuración de Phaser
     phaser: {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        width: window.innerWidth,  
+        height: window.innerHeight, 
         parent: 'game',
         pixelArt: true,
         physics: {
@@ -48,8 +48,8 @@ const GameConfig = {
     // Configuración del orco
     orc: {
         MAX_HEALTH: 200,
-        SPEED: 80,
-        DETECTION_RADIUS: 150,
+        SPEED: 120,
+        DETECTION_RADIUS: 200,
         SPRITE_CONFIG: {
             frameWidth: 140,
             frameHeight: 150,
@@ -79,6 +79,11 @@ const GameConfig = {
             DURATION: 600,
             FRAME_RATE: 12
         },
+        hit: {
+            SCALE: 0.5,     
+            DURATION: 400,   
+            FRAME_RATE: 20, 
+        }
     },
 
     // Configuración de daño
