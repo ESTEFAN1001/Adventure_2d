@@ -1,8 +1,7 @@
 /**
  * game.js
  * Punto de entrada principal del juego
- * Implementa la escena de Phaser y orquesta el juego a través del GameManager
- */
+ * Implementa la escena de Phaser y orquesta el juego a través del GameManager*/
 
 // Variable global para el gestor del juego
 let gameManager;
@@ -35,6 +34,11 @@ function preload() {
  * Configura el juego, entidades y managers
  */
 function create() {
+    // Cambiar la cantidad y tipos de enemigos aquí:
+    gameManager.setEnemySpawnConfig({
+        'orc': 3
+    });
+
     gameManager.setup();
 
     // Configurar evento de disparo
@@ -50,4 +54,3 @@ function create() {
 function update() {
     gameManager.update();
 }
- 
