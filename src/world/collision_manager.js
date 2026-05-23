@@ -1,6 +1,7 @@
 /**
  * collision_manager.js
  * Gestor centralizado de colisiones
+ * Soporta colisiones con múltiples enemigos
  */
 
 class CollisionManager {
@@ -11,38 +12,69 @@ class CollisionManager {
     constructor(config) {
         this.scene = config.scene;
         this.collisionCallbacks = {};
+        this.activeColliders = [];
     }
 
     /**
-     * Configura colisiones entre el jugador y el orco
+     * Configura colisiones entre el jugador y un único enemigo
      * @param {Player} player - Instancia del jugador
-     * @param {Orc} orc - Instancia del orco
+     * @param {Enemy} enemy - Instancia del enemigo
      * @param {Function} onCollision - Callback cuando colisionan
      */
-    setupPlayerOrcCollision(player, orc, onCollision) {
-        this.scene.physics.add.collider(
+    setupPlayerEnemyCollision(player, enemy, onCollision) {
+        const collider = this.scene.physics.add.collider(
             player.sprite,
-            orc.sprite,
+            enemy.sprite,
             onCollision,
             null,
             this.scene
         );
+        this.activeColliders.push(collider);
     }
 
     /**
-     * Configura colisiones entre proyectiles y el orco
+     * Configura colisiones entre el jugador y múltiples enemigos
+     * @param {Player} player - Instancia del jugador
+     * @param {Array} enemies - Array de enemigos
+     * @param {Function} onCollision - Callback cuando colisionan (recibe player, enemy)
+     */
+    setupPlayerMultipleEnemiesCollision(player, enemies, onCollision) {
+        enemies.forEach(enemy => {
+            this.setupPlayerEnemyCollision(player, enemy, (playerSprite, enemySprite) => {
+                onCollision(player, enemy);
+            });
+        });
+    }
+
+    /**
+     * Configura colisiones entre proyectiles y un único enemigo
      * @param {Phaser.Physics.Group} projectiles - Grupo de proyectiles
-     * @param {Orc} orc - Instancia del orco
+     * @param {Enemy} enemy - Instancia del enemigo
      * @param {Function} onCollision - Callback cuando colisionan
      */
-    setupProjectileOrcCollision(projectiles, orc, onCollision) {
-        this.scene.physics.add.collider(
+    setupProjectileEnemyCollision(projectiles, enemy, onCollision) {
+        const collider = this.scene.physics.add.collider(
             projectiles,
-            orc.sprite,
+            enemy.sprite,
             onCollision,
             null,
             this.scene
         );
+        this.activeColliders.push(collider);
+    }
+
+    /**
+     * Configura colisiones entre proyectiles y múltiples enemigos
+     * @param {Phaser.Physics.Group} projectiles - Grupo de proyectiles
+     * @param {Array} enemies - Array de enemigos
+     * @param {Function} onCollision - Callback cuando colisionan (recibe projectile, enemySprite)
+     */
+    setupProjectileMultipleEnemiesCollision(projectiles, enemies, onCollision) {
+        enemies.forEach(enemy => {
+            this.setupProjectileEnemyCollision(projectiles, enemy, (projectile, enemySprite) => {
+                onCollision(projectile, enemySprite);
+            });
+        });
     }
 
     /**
@@ -52,13 +84,14 @@ class CollisionManager {
      * @param {Function} onCollision - Callback cuando colisionan
      */
     setupProjectileWallCollision(projectiles, walls, onCollision) {
-        this.scene.physics.add.collider(
+        const collider = this.scene.physics.add.collider(
             projectiles,
             walls,
             onCollision,
             null,
             this.scene
         );
+        this.activeColliders.push(collider);
     }
 
     /**
@@ -86,5 +119,23 @@ class CollisionManager {
      */
     clearCallbacks() {
         this.collisionCallbacks = {};
+    }
+
+    /**
+     * Limpia todos los colisores activos
+     */
+    clearColliders() {
+        this.activeColliders.forEach(collider => {
+            collider.destroy();
+        });
+        this.activeColliders = [];
+    }
+
+    /**
+     * Limpia todos los recursos
+     */
+    destroy() {
+        this.clearCallbacks();
+        this.clearColliders();
     }
 }

@@ -2,6 +2,7 @@
  * combat_manager.js
  * Gestor de combate
  * Principio SOLID: Single Responsibility - solo gestiona la lógica de combate
+ * Soporta múltiples enemigos
  */
 
 class CombatManager {
@@ -27,7 +28,7 @@ class CombatManager {
         this.createDamageText(defender, damageAmount);
 
         if (died) {
-            console.log(`${defender.constructor.name} ha muerto`);
+            console.log(`${defender.enemyType || 'Player'} ha muerto`);
         }
 
         return died;
@@ -58,19 +59,19 @@ class CombatManager {
     }
 
     /**
-     * Aplica daño del orco al jugador
-     * @param {Character} player - Jugador
-     * @param {Character} orc - Orco
+     * Aplica daño de un enemigo específico al jugador
+     * @param {Player} player - Jugador
+     * @param {Enemy} enemy - Enemigo que ataca
      */
-    orcAttackPlayer(player, orc) {
-        if (!player.isActive() || !orc.isActive()) return;
+    enemyAttackPlayer(player, enemy) {
+        if (!player.isActive() || !enemy.isActive()) return;
 
         const damage = Phaser.Math.Between(
             GameConfig.combat.ORC_DAMAGE_RANGE.min,
             GameConfig.combat.ORC_DAMAGE_RANGE.max
         );
 
-        const died = this.dealDamage(orc, player, damage);
+        const died = this.dealDamage(enemy, player, damage);
 
         if (died) {
             this.handlePlayerDeath(player);
@@ -78,13 +79,21 @@ class CombatManager {
     }
 
     /**
-     * Proyectil golpea al orco
-     * @param {Phaser.Physics.Sprite} projectile - Proyectil
-     * @param {Orc} orc - Orco
+     * Maneja la muerte del jugador (versión compatible)
+     * @param {Character} player - Jugador
      */
-    projectileHitOrc(projectile, orc) {
-        // Verificar que el orco está vivo y es activo
-        if (!orc || !orc.isActive()) {
+    orcAttackPlayer(player, orc) {
+        this.enemyAttackPlayer(player, orc);
+    }
+
+    /**
+     * Proyectil golpea a un enemigo
+     * @param {Phaser.Physics.Sprite} projectile - Proyectil
+     * @param {Enemy} enemy - Enemigo golpeado
+     */
+    projectileHitEnemy(projectile, enemy) {
+        // Verificar que el enemigo está vivo y es activo
+        if (!enemy || !enemy.isActive()) {
             if (projectile && projectile.active) {
                 projectile.destroy();
             }
@@ -102,8 +111,8 @@ class CombatManager {
             GameConfig.projectiles.DAMAGE_RANGE.max
         );
 
-        console.log(`Proyectil golpea al orco: ${damage} daño`);
-        this.dealDamage(null, orc, damage);
+        console.log(`Proyectil golpea a ${enemy.enemyType}: ${damage} daño`);
+        this.dealDamage(null, enemy, damage);
         
         // Destruir el proyectil solo una vez
         if (projectile.active) {
@@ -131,19 +140,25 @@ class CombatManager {
     /**
      * Verifica si el combate ha terminado
      * @param {Character} player - Jugador
-     * @param {Character} orc - Orco
+     * @param {Array} enemies - Array de enemigos
      * @returns {Object} Estado del juego {gameOver: boolean, winner: string}
      */
-    checkCombatStatus(player, orc) {
-        if (!player.isActive() && !orc.isActive()) {
+    checkCombatStatus(player, enemies) {
+        // Verificar si el jugador está vivo
+        const playerAlive = player.isActive();
+        
+        // Verificar si hay enemigos vivos
+        const enemiesAlive = enemies.some(enemy => enemy.isActive());
+
+        if (!playerAlive && !enemiesAlive) {
             return { gameOver: true, winner: 'draw' };
         }
 
-        if (!player.isActive()) {
-            return { gameOver: true, winner: 'orc' };
+        if (!playerAlive) {
+            return { gameOver: true, winner: 'enemies' };
         }
 
-        if (!orc.isActive()) {
+        if (!enemiesAlive) {
             return { gameOver: true, winner: 'player' };
         }
 
