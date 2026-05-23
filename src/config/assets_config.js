@@ -44,8 +44,10 @@ const AssetsConfig = {
             key: 'explosion',
             path: 'assets/images/explosion.png',
             frameConfig: {
-                frameWidth: 32,
-                frameHeight: 32
+                frameWidth: 283,  
+                frameHeight: 245, 
+                spacing: 0,
+                margin: 0
             }
         }
     },

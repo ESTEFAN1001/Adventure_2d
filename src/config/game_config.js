@@ -72,6 +72,15 @@ const GameConfig = {
         DAMAGE_RANGE: { min: 5, max: 15 }
     },
 
+    // Configuración de efectos visuales
+    effects: {
+        explosion: {
+            SCALE: 0.5,
+            DURATION: 600,
+            FRAME_RATE: 12
+        },
+    },
+
     // Configuración de daño
     combat: {
         PLAYER_DAMAGE_DELAY: 1000, // milisegundos entre daños
