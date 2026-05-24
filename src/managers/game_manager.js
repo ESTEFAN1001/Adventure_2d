@@ -19,6 +19,7 @@ class GameManager {
         this.projectileManager = null;
         this.spawnManager = null;
         this.effectManager = null;
+        this.powerUpManager = null;
 
         // Entidades
         this.player = null;
@@ -90,6 +91,9 @@ class GameManager {
         // Crear entidades
         this.setupEntities();
 
+        //Crear powerups
+        this.setupPowerUps();
+
         // Configurar colisiones
         this.setupCollisions();
 
@@ -159,6 +163,8 @@ class GameManager {
             walls: this.walls,
             findValidPositionFarFromPlayer: this.findValidPositionFarFromPlayer.bind(this)
         });
+
+        this.scene.gameManager = this;
     }
 
     /**
@@ -188,6 +194,71 @@ class GameManager {
         console.log(`Jugador creado en (${playerPos.x}, ${playerPos.y})`);
         console.log(`${this.enemies.length} enemigo(s) generado(s)`);
     }
+
+    /**
+    * Configura el sistema de powerups
+    */
+    setupPowerUps() {
+        this.powerUpManager = new PowerUpManager({
+            scene: this.scene,
+            player: this.player,
+            walls: this.walls,
+            findValidPosition: this.findValidPositionForPowerUp.bind(this)
+        });
+        console.log('PowerUpManager inicializado');
+    }
+
+    /**
+ * Encuentra posición válida para powerup (evita paredes y jugador)
+ * @returns {Object|null} Posición {x, y} o null
+ */
+findValidPositionForPowerUp() {
+    const mapConfig = GameConfig.map;
+    const tileSize = mapConfig.TILE_SIZE;
+    let attempts = 0;
+    const maxAttempts = 50; // Aumentado de 30 a 50
+    
+    console.log('[GameManager] Buscando posición para powerup...');
+    
+    while (attempts < maxAttempts) {
+        // Área más amplia
+        const x = Phaser.Math.Between(5, mapConfig.MAP_WIDTH - 6) * tileSize;
+        const y = Phaser.Math.Between(5, mapConfig.MAP_HEIGHT - 6) * tileSize;
+        
+        // Verificar que no colisione con paredes
+        let collidesWithWall = false;
+        for (let wall of this.walls.getChildren()) {
+            const distance = Phaser.Math.Distance.Between(x, y, wall.x, wall.y);
+            if (distance < 35) { // Reducido de 40 a 35
+                collidesWithWall = true;
+                break;
+            }
+        }
+        
+        if (collidesWithWall) {
+            attempts++;
+            continue;
+        }
+        
+        // Verificar distancia al jugador (mínimo 150px - reducido)
+        const distanceToPlayer = Phaser.Math.Distance.Between(x, y, this.player.sprite.x, this.player.sprite.y);
+        
+        // Condición más flexible
+        if (distanceToPlayer > 150 && distanceToPlayer < 600) {
+            console.log(`[GameManager] Posición encontrada: (${x}, ${y}) distancia: ${Math.floor(distanceToPlayer)}px`);
+            return { x, y };
+        }
+        
+        attempts++;
+    }
+    
+    // FALLBACK: Si no encuentra, devuelve una posición aleatoria sin tantas restricciones
+    console.log('[GameManager] Usando posición fallback');
+    return {
+        x: Phaser.Math.Between(10, (mapConfig.MAP_WIDTH - 10)) * tileSize,
+        y: Phaser.Math.Between(10, (mapConfig.MAP_HEIGHT - 10)) * tileSize
+    };
+}
 
     /**
      * Configura las colisiones entre entidades
@@ -491,6 +562,7 @@ class GameManager {
             if (hb) hb.destroy();
         });
         if (this.projectileManager) this.projectileManager.clear();
+        if (this.powerUpManager) this.powerUpManager.destroy();
         if (this.effectManager) this.effectManager.destroy();
     }
 }
