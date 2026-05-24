@@ -73,6 +73,15 @@ class CombatManager {
             GameConfig.combat.ORC_DAMAGE_RANGE.max
         );
 
+        // Efecto visual de ataque
+        if (this.effectManager) {
+            const pos = player.getPosition();
+            this.effectManager.createEffect('hit', {
+                x: pos.x,
+                y: pos.y,
+            });
+        }
+
         const died = this.dealDamage(enemy, player, damage);
 
         if (died) {
@@ -125,12 +134,11 @@ class CombatManager {
         // Crear efecto de explosión en el punto de impacto
         if (this.effectManager) {
             console.log(`Creando explosión en (${impactPos.x}, ${impactPos.y})`);
-            this.effectManager.createExplosion({
+            this.effectManager.createEffect('explosion', {
                 x: impactPos.x,
                 y: impactPos.y,
-                scale: GameConfig.effects.explosion.SCALE,
-                duration: GameConfig.effects.explosion.DURATION
             });
+
         } else {
             console.error('EffectManager no está disponible');
         }
