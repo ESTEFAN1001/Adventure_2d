@@ -47,7 +47,21 @@ const AssetsConfig = {
                 frameWidth: 283,  
                 frameHeight: 245, 
                 spacing: 0,
-                margin: 0
+                margin: 0,
+                rows: 3,
+                cols: 3,
+            }
+        },
+        hit: {  
+            key: 'hit',
+            path: 'assets/images/hit_orc.png',
+            frameConfig: {
+                frameWidth: 192,  
+                frameHeight: 196,
+                spacing: 0,
+                margin: 0,
+                rows: 5,
+                cols: 5,
             }
         }
     },
