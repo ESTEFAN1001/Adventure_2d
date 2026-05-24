@@ -86,6 +86,62 @@ const GameConfig = {
         }
     },
 
+    // Configuración de powerups
+    powerups: {
+        SPAWN_INTERVAL: { min: 10000, max: 20000 }, // 10-20 segundos
+        MAX_ACTIVE_POWERUPS: 5,
+        DURATION: 5000, // Duración de efectos 
+        NEGATIVE_DURATION: 6000, // Duración de efectos perjudiciales
+        POISON_TICK_DAMAGE: 1,
+        POISON_TICK_INTERVAL: 400, // 0.4 segundos
+        POISON_MAX_TICKS: 15, // Máximo 15 ticks (-15 vida)
+        HEAL_RANGE: { min: 7, max: 19 },
+        types: {
+            speed_boost: { // Multiplicador de velocidad
+                name: 'Speed Boost',
+                color: '#00ff00',
+                beneficial: true,
+                duration: 10000,
+                effectValue: 1.5, 
+            },
+            fire_rate_boost: { // Reducción del delay de disparo
+                name: 'Fire Rate Boost',
+                color: '#ff6600',
+                beneficial: true,
+                duration: 10000,
+                effectValue: 0.5, 
+            },
+            damage_boost: { // Multiplicador de daño
+                name: 'Damage Boost',
+                color: '#ff0000',
+                beneficial: true,
+                duration: 10000,
+                effectValue: 2,
+            },
+            heal: { // Curación instantánea
+                name: 'Heal',
+                color: '#00ff00',
+                beneficial: true,
+                duration: 0,
+                effectValue: null,
+            },
+            slow_down: { // Reducción de velocidad
+                name: 'Slow Down',
+                color: '#888888',
+                beneficial: false,
+                duration: 5000,
+                effectValue: 0.5,
+            },
+            poison: { // Daño por segundo
+                name: 'Poison',
+                color: '#8800ff',
+                beneficial: false,
+                duration: 6000,
+                effectValue: null,
+            }
+        }
+    },
+
     // Configuración de daño
     combat: {
         PLAYER_DAMAGE_DELAY: 1000, // milisegundos entre daños
