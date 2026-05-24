@@ -58,6 +58,15 @@ class Projectile {
     }
 
     /**
+     * Cambia el delay de disparo dinámicamente
+     * @param {number} newDelay - Nuevo delay en ms
+    */
+    setFireDelay(newDelay) {
+        this.fireDelay = newDelay;
+        console.log(`[Projectile] Fire delay cambiado a: ${newDelay}ms`);
+    }
+
+    /**
      * Calcula la velocidad y rotación según la dirección
      * @param {string} direction - Dirección (up, down, left, right)
      * @returns {Object} Objeto con velocityX, velocityY y rotation
