@@ -123,29 +123,30 @@ class Player extends Character {
         this.isMoving = false;
         this.sprite.setVelocity(0);
 
-        // Movimiento horizontal
-        if (this.cursors.left.isDown || this.aKey.isDown) {
-            this.sprite.setVelocityX(-this.speed);
-            this.sprite.anims.play('player-left', true);
-            this.currentDirection = 'left';
-            this.isMoving = true;
-        } else if (this.cursors.right.isDown || this.dKey.isDown) {
-            this.sprite.setVelocityX(this.speed);
-            this.sprite.anims.play('player-right', true);
-            this.currentDirection = 'right';
-            this.isMoving = true;
-        }
-
-        // Movimiento vertical
+        // Movimiento VERTICAL 
         if (this.cursors.up.isDown || this.wKey.isDown) {
             this.sprite.setVelocityY(-this.speed);
             this.sprite.anims.play('player-up', true);
             this.currentDirection = 'up';
             this.isMoving = true;
-        } else if (this.cursors.down.isDown || this.sKey.isDown) {
+        } 
+        else if (this.cursors.down.isDown || this.sKey.isDown) {
             this.sprite.setVelocityY(this.speed);
             this.sprite.anims.play('player-down', true);
             this.currentDirection = 'down';
+            this.isMoving = true;
+        }
+        // Movimiento HORIZONTAL 
+        else if (this.cursors.left.isDown || this.aKey.isDown) {
+            this.sprite.setVelocityX(-this.speed);
+            this.sprite.anims.play('player-left', true);
+            this.currentDirection = 'left';
+            this.isMoving = true;
+        } 
+        else if (this.cursors.right.isDown || this.dKey.isDown) {
+            this.sprite.setVelocityX(this.speed);
+            this.sprite.anims.play('player-right', true);
+            this.currentDirection = 'right';
             this.isMoving = true;
         }
 
