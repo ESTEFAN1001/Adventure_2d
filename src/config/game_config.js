@@ -83,6 +83,11 @@ const GameConfig = {
             SCALE: 0.5,     
             DURATION: 400,   
             FRAME_RATE: 20, 
+        },
+        power_up_effect: {
+            SCALE: 0.5,     
+            DURATION: 400,   
+            FRAME_RATE: 12, 
         }
     },
 

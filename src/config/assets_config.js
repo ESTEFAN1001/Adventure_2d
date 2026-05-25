@@ -64,6 +64,18 @@ const AssetsConfig = {
                 cols: 5,
             }
         },
+        power_up_effect: {  
+            key: 'power_up_effect',
+            path: 'assets/images/powerup.png',
+            frameConfig: {
+                frameWidth: 700,  
+                frameHeight: 700,
+                spacing: 0,
+                margin: 0,
+                rows: 2,
+                cols: 2,
+            }
+        },
         powerup_speed: {
             key: 'powerup_speed',
             path: 'assets/images/speed.png',

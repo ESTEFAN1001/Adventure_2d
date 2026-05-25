@@ -102,6 +102,15 @@ class PowerUpManager {
         console.log(`Recogido: ${powerUp.type}`);
         powerUp.applyEffect(this.player);
         this.removePowerUp(powerUp);
+
+        if (this.scene.gameManager && this.scene.gameManager.effectManager) {
+            const pos = this.player.getPosition();
+            this.scene.gameManager.effectManager.createEffect('power_up_effect', {
+                x: pos.x,
+                y: pos.y - 2,
+                scale: 0.15
+            });
+        }
     }
 
     removePowerUp(powerUp) {
