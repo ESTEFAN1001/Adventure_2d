@@ -63,6 +63,78 @@ const AssetsConfig = {
                 rows: 5,
                 cols: 5,
             }
+        },
+        powerup_speed: {
+            key: 'powerup_speed',
+            path: 'assets/images/speed.png',
+            frameConfig: {
+                frameWidth: 32,  
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
+        },
+        powerup_fire: {
+            key: 'powerup_fire',
+            path: 'assets/images/fire_rate.png',
+            frameConfig: {
+                frameWidth: 32,
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
+        },
+        powerup_damage: {
+            key: 'powerup_damage',
+            path: 'assets/images/damage.png',
+            frameConfig: {
+                frameWidth: 32,
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
+        },
+        powerup_heal: {
+            key: 'powerup_heal',
+            path: 'assets/images/heal.png',
+            frameConfig: {
+                frameWidth: 32,
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
+        },
+        powerup_slow: {
+            key: 'powerup_slow',
+            path: 'assets/images/slow_down.png',
+            frameConfig: {
+                frameWidth: 32,
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
+        },
+        powerup_poison: {
+            key: 'powerup_poison',
+            path: 'assets/images/poison.png',
+            frameConfig: {
+                frameWidth: 32,
+                frameHeight: 32,
+                spacing: 0,
+                margin: 0,
+                rows: 1,
+                cols: 3,
+            }
         }
     },
 

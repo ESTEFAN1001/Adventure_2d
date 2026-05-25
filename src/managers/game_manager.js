@@ -346,6 +346,10 @@ findValidPositionForPowerUp() {
         // Actualizar todos los enemigos a través del SpawnManager
         this.spawnManager.update();
 
+        if (this.powerupManager) {
+            this.powerupManager.checkCollision(this.player);
+        }
+
         // Actualizar UI
         this.playerHealthBar.update();
 
