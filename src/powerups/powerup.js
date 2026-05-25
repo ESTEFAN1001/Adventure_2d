@@ -18,27 +18,57 @@ class PowerUp {
         this.type = config.type;
         this.config = GameConfig.powerups.types[this.type];
         
+        this.spriteKeyMap = {
+            'speed_boost': 'powerup_speed',
+            'fire_rate_boost': 'powerup_fire',
+            'damage_boost': 'powerup_damage',
+            'heal': 'powerup_heal',
+            'slow_down': 'powerup_slow',
+            'poison': 'powerup_poison'
+        };
+        
         this.sprite = null;
         this.text = null;
         this.isActive = true;
     }
 
     /**
-     * Crea el sprite del powerup (mismo para todos)
+     * Crea el sprite del powerup 
      */
     create() {
-        // Círculo coloreado temporal (luego puedes reemplazar con sprites)
-        this.sprite = this.scene.add.circle(this.x, this.y, 14, this.config.color);
+        const spriteKey = this.spriteKeyMap[this.type];
+        
+        // Verificar que existe el spritesheet
+        if (!this.scene.textures.exists(spriteKey)) {
+            console.error(`[PowerUp] Spritesheet no encontrado: ${spriteKey} para tipo ${this.type}`);
+            return;
+        }
+        
+        // Crear sprite con frame 0
+        this.sprite = this.scene.add.sprite(this.x, this.y, spriteKey, 0);
         this.sprite.setDepth(900);
-        this.sprite.setStrokeStyle(2, 0xffffff);
+        this.sprite.setScale(1.5);
         
         // Agregar física
         this.scene.physics.add.existing(this.sprite);
-        this.sprite.body.setCircle(14);
+        this.sprite.body.setCircle(16);
         this.sprite.body.setImmovable(true);
         
-        // Texto del powerup
-        this.text = this.scene.add.text(this.x, this.y - 22, this.config.name, {
+        // ANIMACIÓN de los 3 frames
+        this.scene.anims.create({
+            key: `anim_${this.type}`,
+            frames: this.scene.anims.generateFrameNumbers(spriteKey, {
+                start: 0,
+                end: 2
+            }),
+            frameRate: 6,
+            repeat: -1
+        });
+        
+        this.sprite.anims.play(`anim_${this.type}`);
+        
+        // Texto opcional
+        this.text = this.scene.add.text(this.x, this.y - 28, this.config.name, {
             font: 'bold 10px Arial',
             fill: '#ffffff',
             stroke: '#000000',
@@ -52,17 +82,6 @@ class PowerUp {
             targets: [this.sprite, this.text],
             y: this.y - 8,
             duration: 1200,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        
-        // Animación de brillo
-        this.scene.tweens.add({
-            targets: this.sprite,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 500,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
