@@ -28,6 +28,7 @@ class GameManager {
         // Elementos de interfaz
         this.playerHealthBar = null;
         this.enemyHealthBars = [];
+        this.gameUI = null;
         this.debugText = null;
 
         // Grupos de física
@@ -209,56 +210,56 @@ class GameManager {
     }
 
     /**
- * Encuentra posición válida para powerup (evita paredes y jugador)
- * @returns {Object|null} Posición {x, y} o null
- */
-findValidPositionForPowerUp() {
-    const mapConfig = GameConfig.map;
-    const tileSize = mapConfig.TILE_SIZE;
-    let attempts = 0;
-    const maxAttempts = 50; // Aumentado de 30 a 50
-    
-    console.log('[GameManager] Buscando posición para powerup...');
-    
-    while (attempts < maxAttempts) {
-        // Área más amplia
-        const x = Phaser.Math.Between(5, mapConfig.MAP_WIDTH - 6) * tileSize;
-        const y = Phaser.Math.Between(5, mapConfig.MAP_HEIGHT - 6) * tileSize;
+     * Encuentra posición válida para powerup (evita paredes y jugador)
+     * @returns {Object|null} Posición {x, y} o null
+     */
+    findValidPositionForPowerUp() {
+        const mapConfig = GameConfig.map;
+        const tileSize = mapConfig.TILE_SIZE;
+        let attempts = 0;
+        const maxAttempts = 50; // Aumentado de 30 a 50
         
-        // Verificar que no colisione con paredes
-        let collidesWithWall = false;
-        for (let wall of this.walls.getChildren()) {
-            const distance = Phaser.Math.Distance.Between(x, y, wall.x, wall.y);
-            if (distance < 35) { // Reducido de 40 a 35
-                collidesWithWall = true;
-                break;
+        console.log('[GameManager] Buscando posición para powerup...');
+        
+        while (attempts < maxAttempts) {
+            // Área más amplia
+            const x = Phaser.Math.Between(5, mapConfig.MAP_WIDTH - 6) * tileSize;
+            const y = Phaser.Math.Between(5, mapConfig.MAP_HEIGHT - 6) * tileSize;
+            
+            // Verificar que no colisione con paredes
+            let collidesWithWall = false;
+            for (let wall of this.walls.getChildren()) {
+                const distance = Phaser.Math.Distance.Between(x, y, wall.x, wall.y);
+                if (distance < 35) { // Reducido de 40 a 35
+                    collidesWithWall = true;
+                    break;
+                }
             }
-        }
-        
-        if (collidesWithWall) {
+            
+            if (collidesWithWall) {
+                attempts++;
+                continue;
+            }
+            
+            // Verificar distancia al jugador (mínimo 150px - reducido)
+            const distanceToPlayer = Phaser.Math.Distance.Between(x, y, this.player.sprite.x, this.player.sprite.y);
+            
+            // Condición más flexible
+            if (distanceToPlayer > 150 && distanceToPlayer < 600) {
+                console.log(`[GameManager] Posición encontrada: (${x}, ${y}) distancia: ${Math.floor(distanceToPlayer)}px`);
+                return { x, y };
+            }
+            
             attempts++;
-            continue;
         }
         
-        // Verificar distancia al jugador (mínimo 150px - reducido)
-        const distanceToPlayer = Phaser.Math.Distance.Between(x, y, this.player.sprite.x, this.player.sprite.y);
-        
-        // Condición más flexible
-        if (distanceToPlayer > 150 && distanceToPlayer < 600) {
-            console.log(`[GameManager] Posición encontrada: (${x}, ${y}) distancia: ${Math.floor(distanceToPlayer)}px`);
-            return { x, y };
-        }
-        
-        attempts++;
+        // FALLBACK: Si no encuentra, devuelve una posición aleatoria sin tantas restricciones
+        console.log('[GameManager] Usando posición fallback');
+        return {
+            x: Phaser.Math.Between(10, (mapConfig.MAP_WIDTH - 10)) * tileSize,
+            y: Phaser.Math.Between(10, (mapConfig.MAP_HEIGHT - 10)) * tileSize
+        };
     }
-    
-    // FALLBACK: Si no encuentra, devuelve una posición aleatoria sin tantas restricciones
-    console.log('[GameManager] Usando posición fallback');
-    return {
-        x: Phaser.Math.Between(10, (mapConfig.MAP_WIDTH - 10)) * tileSize,
-        y: Phaser.Math.Between(10, (mapConfig.MAP_HEIGHT - 10)) * tileSize
-    };
-}
 
     /**
      * Configura las colisiones entre entidades
@@ -307,13 +308,14 @@ findValidPositionForPowerUp() {
             this.enemyHealthBars.push(enemyHealthBar);
         });
 
-        // Texto de debug
-        this.debugText = this.scene.add.text(16, 16, '', {
-            font: '16px Arial',
-            fill: '#ffffff',
-            backgroundColor: '#000000'
+        // Nueva UI mejorada
+        this.gameUI = new GameUI({
+            scene: this.scene,
+            player: this.player,
+            spawnManager: this.spawnManager,
+            width: GameConfig.phaser.width,
+            height: GameConfig.phaser.height
         });
-        this.debugText.setScrollFactor(0);
     }
 
     /**
@@ -352,6 +354,11 @@ findValidPositionForPowerUp() {
 
         // Actualizar UI
         this.playerHealthBar.update();
+        
+        // Actualizar nueva UI mejorada
+        if (this.gameUI) {
+            this.gameUI.update();
+        }
 
         // Actualizar debug
         if (this.debugCounter % GameConfig.debug.LOG_INTERVAL === 0) {
@@ -392,7 +399,8 @@ findValidPositionForPowerUp() {
             }
         });
 
-        this.debugText.setText(debugInfo);
+        // Comentado: debugText fue reemplazado por gameUI
+        // this.debugText.setText(debugInfo);
     }
 
     /**

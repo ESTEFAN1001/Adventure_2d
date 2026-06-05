@@ -14,6 +14,8 @@ class Poison extends PowerUp {
         const tickDamage = GameConfig.powerups.POISON_TICK_DAMAGE;
         const tickInterval = GameConfig.powerups.POISON_TICK_INTERVAL;
         
+        player.addActivePowerUp('poison', this.config.duration);
+        
         this.showEffectMessage(player, '☠️ ENVENENADO!', '#aa44ff');
         
         // Mostrar contador de veneno

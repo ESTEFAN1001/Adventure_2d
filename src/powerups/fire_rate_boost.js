@@ -22,6 +22,7 @@ class FireRateBoost extends PowerUp {
         const boostedDelay = originalDelay * this.config.effectValue;
         
         gameManager.projectileManager.setFireDelay(boostedDelay);
+        player.addActivePowerUp('fire_rate_boost', this.config.duration);
         
         this.showEffectMessage(player, `🔥 CADENCIA +${Math.round((1 - this.config.effectValue) * 100)}%!`, '#ff6600');
         

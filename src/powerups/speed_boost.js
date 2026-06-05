@@ -13,6 +13,7 @@ class SpeedBoost extends PowerUp {
         const boostedSpeed = originalSpeed * this.config.effectValue;
         
         player.speed = boostedSpeed;
+        player.addActivePowerUp('speed_boost', this.config.duration);
         
         this.showEffectMessage(player, `⚡ VELOCIDAD +${(this.config.effectValue - 1) * 100}%!`, '#00ff00');
         

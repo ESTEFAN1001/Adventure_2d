@@ -14,6 +14,7 @@ class DamageBoost extends PowerUp {
         
         GameConfig.projectiles.DAMAGE_RANGE.min = originalMin * this.config.effectValue;
         GameConfig.projectiles.DAMAGE_RANGE.max = originalMax * this.config.effectValue;
+        player.addActivePowerUp('damage_boost', this.config.duration);
         
         this.showEffectMessage(player, `💥 DAÑO x${this.config.effectValue}!`, '#ff0000');
         

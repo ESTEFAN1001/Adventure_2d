@@ -13,6 +13,7 @@ class SlowDown extends PowerUp {
         const slowedSpeed = originalSpeed * this.config.effectValue;
         
         player.speed = slowedSpeed;
+        player.addActivePowerUp('slow_down', this.config.duration);
         
         this.showEffectMessage(player, `🐌 VELOCIDAD -${Math.round((1 - this.config.effectValue) * 100)}%!`, '#ff4444');
         
