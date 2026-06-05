@@ -31,6 +31,10 @@ class HealthBar {
         this.graphics = this.scene.add.graphics();
         this.text = this.scene.add.text(0, 0, '', this.style.textStyle);
         this.isVisible = true;
+
+        // Configuración de la barra de dash
+        this.dashBarHeight = 5;
+        this.dashBarSpacing = 2;
     }
 
     /**
@@ -46,6 +50,7 @@ class HealthBar {
         // Limpiar y redibujar la barra
         this.graphics.clear();
         
+        // Barra de vida
         // Fondo negro
         this.graphics.fillStyle(this.style.backgroundColor);
         this.graphics.fillRect(barX, barY, this.style.barWidth, this.style.barHeight);
@@ -56,6 +61,25 @@ class HealthBar {
         
         this.graphics.fillStyle(this.style.healthColor);
         this.graphics.fillRect(barX, barY, healthWidth, this.style.barHeight);
+
+        // Barra de dash 
+        if (typeof this.character.getDashCooldownRemaining === 'function') {
+            const dashY = barY + this.style.barHeight + this.dashBarSpacing;
+            
+            // Fondo de la barra de dash
+            this.graphics.fillStyle(this.style.backgroundColor);
+            this.graphics.fillRect(barX, dashY, this.style.barWidth, this.dashBarHeight);
+            
+            const dashCooldownRemaining = this.character.getDashCooldownRemaining();
+            const dashCooldown = this.character.DASH_COOLDOWN;
+            const dashPercent = Math.max(0, (dashCooldown - dashCooldownRemaining) / dashCooldown);
+            const dashWidth = Math.max(0, this.style.barWidth * dashPercent);
+            
+            // Color verde cuando está listo, naranja cuando está en cooldown
+            const dashColor = dashCooldownRemaining <= 0 ? 0x00ff00 : 0xff8800;
+            this.graphics.fillStyle(dashColor);
+            this.graphics.fillRect(barX, dashY, dashWidth, this.dashBarHeight);
+        }
 
         // Actualizar texto
         this.text.setPosition(

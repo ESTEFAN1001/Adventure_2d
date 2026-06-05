@@ -32,6 +32,18 @@ class Player extends Character {
         this.inputHandler = null;
         this.healthBar = null;
         this.healthText = null;
+
+        this.lastKeyPress = null;
+        this.lastPressTime = 0;
+        this.dashCooldown = 0;
+        this.isDashing = false;
+        this.DASH_COOLDOWN = 5000; // 5 segundos
+        this.DASH_DISTANCE = 150;   // Distancia del dash en píxeles
+        this.DASH_DURATION = 150;   // Duración del dash en ms
+        this.DOUBLE_PRESS_DELAY = 300; // Tiempo máximo entre dos presiones (ms)
+
+        // Sistema de powerups activos
+        this.activePowerUps = []; // Array de {type, endTime, startTime}
     }
 
     /**
@@ -94,6 +106,9 @@ class Player extends Character {
         this.sKey = this.scene.input.keyboard.addKey('S');
         this.dKey = this.scene.input.keyboard.addKey('D');
         this.cKey = this.scene.input.keyboard.addKey('C');
+
+        // Configurar controles de dash
+        this.setupDashControls();
 
         // Evento para cambiar ropa
         this.scene.input.keyboard.on('keydown-C', () => this.toggleClothes());
@@ -163,14 +178,16 @@ class Player extends Character {
     takeDamage(amount) {
         const died = super.takeDamage(amount);
 
+        this.scene.tweens.killTweensOf(this.sprite);
+        this.sprite.alpha = 1;
+
         if (this.currentHealth > 0) {
-            // Efecto visual de daño
             this.scene.tweens.add({
                 targets: this.sprite,
                 alpha: 0.5,
-                duration: 100,
+                duration: 200,
                 yoyo: true,
-                repeat: 3
+                repeat: 4,
             });
         }
 
@@ -199,5 +216,136 @@ class Player extends Character {
      */
     isPlayerMoving() {
         return this.isMoving;
+    }
+
+    /**
+     * Configura la detección de doble presión para dash
+    */
+    setupDashControls() {
+        // Teclas WASD
+        this.wKey.on('down', () => this.handleDashInput('up'));
+        this.aKey.on('down', () => this.handleDashInput('left'));
+        this.sKey.on('down', () => this.handleDashInput('down'));
+        this.dKey.on('down', () => this.handleDashInput('right'));
+        
+        // Teclas de flechas
+        this.cursors.up.on('down', () => this.handleDashInput('up'));
+        this.cursors.down.on('down', () => this.handleDashInput('down'));
+        this.cursors.left.on('down', () => this.handleDashInput('left'));
+        this.cursors.right.on('down', () => this.handleDashInput('right'));
+    }
+
+    /**
+     * Maneja la lógica de doble presión para dash
+     * @param {string} direction - Dirección presionada
+     */
+    handleDashInput(direction) {
+        const currentTime = this.scene.time.now;
+        
+        // Verificar cooldown
+        if (this.dashCooldown > currentTime) {
+            return;
+        }
+        
+        // Si es la misma dirección y está dentro del tiempo límite
+        if (this.lastKeyPress === direction && 
+            (currentTime - this.lastPressTime) <= this.DOUBLE_PRESS_DELAY) {
+            this.executeDash(direction);
+            this.lastKeyPress = null; // Resetear para evitar múltiples dashes
+        } else {
+            // Guardar primera presión
+            this.lastKeyPress = direction;
+            this.lastPressTime = currentTime;
+        }
+    }
+
+    /**
+     * Ejecuta el dash en la dirección indicada
+     * @param {string} direction - Dirección del dash
+     */
+    executeDash(direction) {
+        if (this.isDashing) return;
+        
+        // Calcular destino
+        let targetX = this.sprite.x;
+        let targetY = this.sprite.y;
+        
+        switch(direction) {
+            case 'up':
+                targetY = this.sprite.y - this.DASH_DISTANCE;
+                break;
+            case 'down':
+                targetY = this.sprite.y + this.DASH_DISTANCE;
+                break;
+            case 'left':
+                targetX = this.sprite.x - this.DASH_DISTANCE;
+                break;
+            case 'right':
+                targetX = this.sprite.x + this.DASH_DISTANCE;
+                break;
+        }
+        
+        // Limitar dentro de los límites del mundo
+        const bounds = this.scene.physics.world.bounds;
+        targetX = Math.min(Math.max(targetX, bounds.x + 20), bounds.x + bounds.width - 20);
+        targetY = Math.min(Math.max(targetY, bounds.y + 20), bounds.y + bounds.height - 20);
+        
+        // Animar el dash
+        this.scene.tweens.add({
+            targets: this.sprite,
+            x: targetX,
+            y: targetY,
+            duration: this.DASH_DURATION,
+            ease: 'Power2',
+            onComplete: () => {
+                // Reactivar colisiones
+                this.sprite.body.enable = true;
+                this.isDashing = false;
+                
+                // Iniciar cooldown
+                this.dashCooldown = this.scene.time.now + this.DASH_COOLDOWN;
+            }
+        });
+    }
+
+    /**
+     * Agrega un powerup activo al jugador
+     * @param {string} type - Tipo de powerup
+     * @param {number} duration - Duración en ms
+     */
+    addActivePowerUp(type, duration) {
+        // Limpiar powerups expirados
+        this.activePowerUps = this.activePowerUps.filter(
+            p => this.scene.time.now < p.endTime
+        );
+
+        const endTime = this.scene.time.now + duration;
+        this.activePowerUps.push({
+            type: type,
+            startTime: this.scene.time.now,
+            endTime: endTime,
+            duration: duration
+        });
+    }
+
+    /**
+     * Obtiene los powerups activos
+     * @returns {Array} Array de powerups activos
+     */
+    getActivePowerUps() {
+        // Filtrar powerups expirados
+        this.activePowerUps = this.activePowerUps.filter(
+            p => this.scene.time.now < p.endTime
+        );
+        return this.activePowerUps;
+    }
+
+    /**
+     * Obtiene el tiempo restante del cooldown del dash en ms
+     * @returns {number} Milisegundos restantes (0 si está disponible)
+     */
+    getDashCooldownRemaining() {
+        const remaining = this.dashCooldown - this.scene.time.now;
+        return Math.max(0, remaining);
     }
 }
